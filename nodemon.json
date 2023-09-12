@@ -1,0 +1,5 @@
+{
+    "ignore": ["data/*", "dist/*"],
+    "ext": ".ts,.js",
+    "exec": "ts-node ./src/server.ts"
+}
