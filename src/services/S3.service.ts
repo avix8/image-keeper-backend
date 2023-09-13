@@ -1,6 +1,6 @@
 import AWS from "aws-sdk";
 import { S3Client } from "@aws-sdk/client-s3";
-
+import stream from "stream";
 import { config } from "dotenv-defaults";
 config();
 
@@ -12,6 +12,7 @@ const s3Config = {
     endpoint: process.env.S3_ENDPOINT,
     region: "default",
     s3ForcePathStyle: true,
+    forcePathStyle: true,
 };
 
 export class S3<Bucket extends string> {
@@ -35,6 +36,28 @@ export class S3<Bucket extends string> {
 
     getStream(Bucket: Bucket, Key: string) {
         return this.s3.getObject({ Bucket, Key }).createReadStream();
+    }
+
+    uploadStream(Bucket: Bucket, Key: string) {
+        let streamPass = new stream.PassThrough();
+        let params = {
+            Bucket,
+            Key,
+            Body: streamPass,
+        };
+        let streamPromise = this.s3
+            .upload(params, (err, data) => {
+                if (err) {
+                    console.error("ERROR: uploadStream:", err);
+                } else {
+                    console.log("INFO: uploadStream:", data);
+                }
+            })
+            .promise();
+        return {
+            streamPass: streamPass,
+            streamPromise: streamPromise,
+        };
     }
 
     async getFile(Bucket: Bucket, Key: string) {
